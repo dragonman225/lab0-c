@@ -182,12 +182,101 @@ void q_reverse(queue_t *q)
 }
 
 /*
+ * Merge two sorted lists into one sorted list.
+ * Return the head of the new list.
+ */
+list_ele_t *merge(list_ele_t *l1, list_ele_t *l2)
+{
+    list_ele_t *head;
+    list_ele_t *tail;
+
+    /* Determine the head. */
+    if (strcmp(l1->value, l2->value) < 0) {
+        /* l1->value is smaller. */
+        head = tail = l1;
+        l1 = l1->next;
+    } else {
+        head = tail = l2;
+        l2 = l2->next;
+    }
+
+    /* Connect elements after the head. */
+    while (l1 && l2) {
+        if (strcmp(l1->value, l2->value) < 0) {
+            /* l1->value is smaller. */
+            tail->next = l1;
+            tail = l1;
+            l1 = l1->next;
+        } else {
+            tail->next = l2;
+            tail = l2;
+            l2 = l2->next;
+        }
+    }
+
+    /* Connect the remaining list. */
+    if (l1)
+        tail->next = l1;
+    else if (l2)
+        tail->next = l2;
+
+    return head;
+}
+
+/*
+ * Split l0 into l1 (the preceding half) and l2 (the succeeding half)
+ * with no elements being copied.
+ */
+void split(list_ele_t *l0, list_ele_t **l1, list_ele_t **l2)
+{
+    list_ele_t *fast = l0->next;
+    list_ele_t *slow = l0;
+
+    while (fast && fast->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+
+    fast = slow->next;
+    slow->next = NULL;
+
+    *l1 = l0;
+    *l2 = fast;
+}
+
+/*
+ * Sort elements of a list in ascending order.
+ * Return the head of the sorted list.
+ */
+list_ele_t *merge_sort(list_ele_t *head)
+{
+    if (!head || !head->next)
+        return head;
+
+    list_ele_t *l1;
+    list_ele_t *l2;
+
+    split(head, &l1, &l2);
+
+    l1 = merge_sort(l1);
+    l2 = merge_sort(l2);
+
+    return merge(l1, l2);
+}
+
+/*
  * Sort elements of queue in ascending order
  * No effect if q is NULL or empty. In addition, if q has only one
  * element, do nothing.
  */
 void q_sort(queue_t *q)
 {
-    /* TODO: You need to write the code for this function */
-    /* TODO: Remove the above comment when you are about to implement. */
+    if (!q || !q->head || !q->head->next)
+        return;
+
+    q->head = merge_sort(q->head);
+    q->tail = q->head;
+    while (q->tail->next) {
+        q->tail = q->tail->next;
+    }
 }
